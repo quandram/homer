@@ -3,7 +3,7 @@
     <div
       class="card"
       :style="`background-color:${item.background};`"
-      :class="item.class"
+      :class="[item.class, { 'is-unavailable': !this.isAvailable }]"
     >
       <a :href="item.url" :target="item.target" rel="noreferrer">
         <div class="card-content">
@@ -45,15 +45,38 @@ export default {
   props: {
     item: Object,
   },
+  data: () => ({
+    isAvailable: null,
+  }),
   computed: {
     mediaClass: function () {
       return { media: true, "no-subtitle": !this.item.subtitle };
     },
   },
+  created() {
+    // Need no-cors to differentiate between CORS error and connection error
+    fetch(this.item.url, { mode: "no-cors" })
+      .then((response) => {
+        if (!response.ok) {
+          // There's some problem or other, probably CORS
+        }
+        this.isAvailable = true;
+      })
+      .catch(() => {
+        this.isAvailable = false;
+      });
+  },
 };
 </script>
 
 <style scoped lang="scss">
+.is-unavailable {
+  opacity: 0.5;
+  pointer-events: none;
+  .card-content {
+    border: 0.2rem solid #ff0000;
+  }
+}
 .media-left {
   .image {
     display: flex;
